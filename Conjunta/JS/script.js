@@ -54,7 +54,67 @@ class BibliotecaDigital {
     }
 }
 
+class SistemaNotificaciones {
+    constructor(biblioteca) {
+        this.biblioteca = biblioteca;
+        this.notificaciones = [];
+    }
 
+    crearNotificacion(mensaje, tipo = 'info') {
+        const notificacion = {
+            id: Date.now(),
+            mensaje,
+            tipo,
+            fechaCreacion: new Date()
+        };
+        this.notificaciones.push(notificacion);
+        this.mostrarNotificacion(notificacion);
+        return notificacion;
+    }
+
+    mostrarNotificacion(notificacion) {
+        const contenedorNotificaciones = document.getElementById('notificaciones');
+        const elementoNotificacion = document.createElement('div');
+        elementoNotificacion.classList.add('notificacion', notificacion-${notificacion.tipo});
+        elementoNotificacion.textContent = notificacion.mensaje;
+        
+        contenedorNotificaciones.appendChild(elementoNotificacion);
+
+        setTimeout(() => {
+            contenedorNotificaciones.removeChild(elementoNotificacion);
+            this.eliminarNotificacion(notificacion.id);
+        }, 5000);
+    }
+
+    eliminarNotificacion(id) {
+        this.notificaciones = this.notificaciones.filter(n => n.id !== id);
+    }
+
+    notificarDisponibilidad(libroId) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                const libro = this.biblioteca.libros.find(l => l.id === libroId);
+                if (libro && libro.disponible) {
+                    this.crearNotificacion(`El libro "${libro.titulo}" está disponible, 'success'`);
+                    resolve(true);
+                } else {
+                    this.crearNotificacion(`El libro no está disponible, 'error'`);
+                    resolve(false);
+                }
+            }, 1000);
+        });
+    }
+
+    recordatoriosDevoluciones() {
+        const librosPrestados = this.biblioteca.librosPrestados;
+        librosPrestados.forEach(prestamo => {
+            const diasPrestamo = Math.floor((new Date() - prestamo.fechaPrestamo) / (1000 * 60 * 60 * 24));
+            if (diasPrestamo > 14) {
+                this.crearNotificacion(`Recordatorio: El libro "${prestamo.libro.titulo}" debe ser devuelto, 'warning'`);
+            }
+        });
+    }
+}
 
 class InterfazBiblioteca {
     constructor() {
